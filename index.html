@@ -320,6 +320,7 @@ a:hover { text-decoration: underline; }
 .marker-highlight .map-marker-label {
   background: var(--warm-500);
   color: white;
+  opacity: 1;
 }
 
 .no-results {
@@ -628,6 +629,12 @@ a.review-rating:hover { background: var(--gray-200); }
   overflow: hidden;
   text-overflow: ellipsis;
   z-index: 3;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.map-marker:hover .map-marker-label {
+  opacity: 1;
+  z-index: 1000 !important;
 }
 .map-marker-home .map-marker-dot {
   display: flex;
