@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cantonese Daycares & Preschools in San Francisco</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --warm-50: #fdf8f0;
+  --warm-100: #f9eed8;
+  --warm-200: #f0dbb0;
+  --warm-300: #e4c178;
+  --warm-400: #d4a04a;
+  --warm-500: #b8832d;
+  --warm-600: #96671e;
+  --warm-700: #6e4c16;
+  --accent: #c0392b;
+  --accent-light: #e74c3c;
+  --green: #27ae60;
+  --green-light: #d5f5e3;
+  --blue: #2980b9;
+  --blue-light: #d6eaf8;
+  --purple: #8e44ad;
+  --purple-light: #ebdef0;
+  --gray-50: #fafafa;
+  --gray-100: #f4f4f5;
+  --gray-200: #e4e4e7;
+  --gray-300: #d4d4d8;
+  --gray-400: #a1a1aa;
+  --gray-500: #71717a;
+  --gray-600: #52525b;
+  --gray-700: #3f3f46;
+  --gray-800: #27272a;
+  --gray-900: #18181b;
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+  --shadow-lg: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.04);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--warm-50);
+  color: var(--gray-800);
+  line-height: 1.6;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, var(--warm-600) 0%, var(--warm-500) 50%, var(--warm-400) 100%);
+  color: white;
+  padding: 1.25rem 1.5rem 0.75rem;
+  text-align: center;
+}
+.header h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; }
+.header p { opacity: 0.9; font-size: 0.95rem; max-width: 600px; margin: 0 auto; }
+.header-meta {
+  display: flex; gap: 1.5rem; justify-content: center;
+  margin-top: 1rem; font-size: 0.85rem; opacity: 0.85;
+}
+
+/* Stats bar */
+.stats-bar {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 0.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  justify-content: center;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+}
+.stat { display: flex; align-items: center; gap: 0.35rem; }
+.stat-num { font-weight: 700; color: var(--warm-600); font-size: 1.05rem; }
+
+/* Controls */
+.controls {
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  padding: 1rem 1.5rem;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+.controls-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.search-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.6rem 1rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.search-box:focus { border-color: var(--warm-500); }
+.search-box::placeholder { color: var(--gray-400); }
+
+
+.filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-select {
+  padding: 0.45rem 0.7rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  background: white;
+  color: var(--gray-700);
+  cursor: pointer;
+  outline: none;
+}
+.filter-select:focus { border-color: var(--warm-500); }
+.filter-count {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-left: auto;
+}
+.clear-btn {
+  padding: 0.45rem 0.8rem;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--gray-200);
+  color: var(--gray-600);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.clear-btn:hover { background: var(--gray-300); }
+
+/* Main content — split layout */
+.main {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  max-width: none;
+}
+.card-panel {
+  width: 420px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.map-panel {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+/* Card */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.card-details { display: none; }
+.card.expanded .card-details { display: block; }
+.card:hover { box-shadow: var(--shadow-lg); }
+.card.expanded {
+  box-shadow: 0 0 0 2px var(--warm-400), var(--shadow-md);
+}
+
+/* Expand hint */
+.card-expand-hint {
+  text-align: center;
+  color: var(--gray-300);
+  font-size: 0.7rem;
+  padding: 0.1rem 0 0.35rem;
+  transition: color 0.2s;
+  user-select: none;
+}
+.card:hover .card-expand-hint { color: var(--gray-400); }
+.card.expanded .card-expand-hint { color: var(--warm-500); }
+
+.card-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--gray-100);
+}
+.card-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gray-900);
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+.card-badges { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.badge-center { background: var(--blue-light); color: var(--blue); }
+.badge-family { background: var(--purple-light); color: var(--purple); }
+.badge-nonprofit { background: var(--green-light); color: var(--green); }
+.badge-subsidy { background: #fef3c7; color: #92400e; }
+
+.card-body { padding: 0.75rem 1.25rem; flex: 1; }
+
+.card-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  line-height: 1.4;
+}
+.card-row-icon {
+  flex-shrink: 0;
+  width: 1.2rem;
+  text-align: center;
+  color: var(--gray-400);
+  font-size: 0.85rem;
+  padding-top: 0.1rem;
+}
+.card-row-content { flex: 1; min-width: 0; }
+.card-row a { word-break: break-all; }
+
+.card-section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-400);
+  margin-top: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.card-desc {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+  padding: 0.5rem 1.25rem 1rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+/* Multi-location expand */
+.locations-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--blue);
+  font-weight: 600;
+  padding: 0;
+}
+.locations-toggle:hover { text-decoration: underline; }
+.locations-toggle .arrow { transition: transform 0.2s; display: inline-block; }
+.locations-toggle .arrow.open { transform: rotate(90deg); }
+
+.locations-list {
+  display: none;
+  margin-top: 0.5rem;
+  padding-left: 0.25rem;
+}
+.locations-list.open { display: block; }
+
+.location-item {
+  font-size: 0.8rem;
+  color: var(--gray-600);
+  padding: 0.35rem 0;
+  border-bottom: 1px dashed var(--gray-200);
+  line-height: 1.4;
+}
+.location-item:last-child { border-bottom: none; }
+.location-name { font-weight: 600; color: var(--gray-700); }
+.location-detail { color: var(--gray-500); }
+
+/* Hover highlights */
+.card.card-active {
+  box-shadow: 0 0 0 3px var(--warm-400), var(--shadow-lg);
+  transition: box-shadow 0.2s;
+}
+.marker-highlight .map-marker-dot {
+  transform: scale(1.6);
+  box-shadow: 0 0 12px rgba(184, 131, 45, 0.6);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.marker-highlight .map-marker-label {
+  background: var(--warm-500);
+  color: white;
+}
+
+.no-results {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--gray-500);
+  font-size: 1rem;
+}
+
+/* Footer (hidden in split layout) */
+.footer {
+  display: none;
+}
+
+/* Map view */
+#mapContainer {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.map-legend {
+  background: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+.map-legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.leaflet-popup-content { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+.map-popup-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; color: var(--gray-900); }
+.map-popup-type { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; padding: 0.1rem 0.4rem; border-radius: 99px; display: inline-block; margin-bottom: 0.3rem; }
+.map-popup-center { background: var(--blue-light); color: var(--blue); }
+.map-popup-family { background: var(--purple-light); color: var(--purple); }
+.map-popup-row { font-size: 0.8rem; color: var(--gray-600); margin: 0.15rem 0; }
+.map-popup-row a { color: var(--blue); }
+.map-popup-desc { font-size: 0.78rem; color: var(--gray-500); margin-top: 0.3rem; border-top: 1px solid var(--gray-200); padding-top: 0.3rem; }
+.map-popup-subloc { font-size: 0.75rem; color: var(--gray-500); font-style: italic; }
+
+/* Mobile view toggle (hidden on desktop) */
+.mobile-view-toggle { display: none; }
+.mobile-tab {
+  flex: 1;
+  padding: 0.55rem;
+  border: 1.5px solid var(--gray-300);
+  background: white;
+  color: var(--gray-600);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+}
+.mobile-tab:first-child { border-radius: var(--radius) 0 0 var(--radius); border-right: none; }
+.mobile-tab:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+.mobile-tab.active {
+  background: var(--warm-500);
+  color: white;
+  border-color: var(--warm-500);
+}
+
+/* Filter toggle button (hidden on desktop) */
+.filter-toggle-btn { display: none; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  /* Compact header */
+  .header { padding: 0.6rem 1rem 0.4rem; }
+  .header h1 { font-size: 1.1rem; margin-bottom: 0; }
+  .header p { display: none; }
+  .header-meta { flex-direction: row; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.75rem; }
+
+  /* Hide stats bar */
+  .stats-bar { display: none; }
+
+  /* Controls */
+  .controls { padding: 0.5rem 0.75rem; }
+  .search-row { flex-direction: row; margin-bottom: 0; }
+  .search-box { font-size: 16px; padding: 0.5rem 0.75rem; min-width: 0; }
+
+  /* Filter toggle */
+  .filter-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid var(--gray-300);
+    border-radius: var(--radius);
+    background: white;
+    color: var(--gray-600);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .filter-toggle-btn.active {
+    background: var(--warm-100);
+    border-color: var(--warm-400);
+    color: var(--warm-700);
+  }
+
+  /* Hide distance bar + filters by default on mobile */
+  .distance-bar { display: none; }
+  .filters { display: none; }
+  .controls.filters-open .distance-bar { display: flex; margin-top: 0.5rem; }
+  .controls.filters-open .filters { display: flex; margin-top: 0.5rem; }
+
+  /* Touch-friendly filter sizes (16px prevents iOS zoom) */
+  .distance-input { min-width: 0; font-size: 16px; }
+  .distance-btn { font-size: 16px; }
+  .filter-select {
+    font-size: 16px;
+    padding: 0.5rem 0.6rem;
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: 0;
+  }
+  .clear-btn { padding: 0.5rem 0.75rem; font-size: 0.85rem; }
+  .filter-count { width: 100%; text-align: center; margin-left: 0; }
+
+  /* View toggle */
+  .mobile-view-toggle {
+    display: flex;
+    background: white;
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid var(--gray-200);
+  }
+
+  /* Main layout: full-screen panels, toggled */
+  .main { flex-direction: column; padding: 0; gap: 0; }
+  .card-panel {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+  .map-panel {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .main.show-map .map-panel { display: block; }
+  .main.show-map .card-panel { display: none; }
+  .main.show-map .no-results { display: none !important; }
+
+  /* Tighter card spacing */
+  .card-header { padding: 0.75rem 1rem 0.5rem; }
+  .card-body { padding: 0.5rem 1rem; }
+  .card-desc { padding: 0.5rem 1rem 0.75rem; }
+  .card-reviews { padding: 0.5rem 1rem 0.75rem; }
+  .card-expand-hint { padding: 0.3rem 0 0.5rem; font-size: 0.75rem; }
+
+  /* Smaller map marker labels */
+  .map-marker-label { max-width: 100px; font-size: 9px; }
+}
+
+/* Distance bar */
+.distance-bar {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.distance-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.distance-input:focus { border-color: var(--warm-500); }
+.distance-btn {
+  padding: 0.5rem 1rem;
+  background: var(--warm-500);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.distance-btn:hover { background: var(--warm-600); }
+.distance-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.distance-status {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+.distance-row {
+  background: var(--warm-100);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--warm-700);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.sort-active {
+  background: var(--warm-500) !important;
+  color: white !important;
+}
+
+/* Reviews */
+.card-reviews {
+  padding: 0.6rem 1.25rem 0.75rem;
+  border-top: 1px solid var(--gray-100);
+}
+.review-ratings {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+.review-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  background: var(--gray-100);
+}
+.review-stars { color: #f5a623; }
+.review-platform { color: var(--gray-500); font-weight: 400; }
+a.review-rating { color: inherit; text-decoration: none; }
+a.review-rating:hover { background: var(--gray-200); }
+.review-quote {
+  font-size: 0.8rem;
+  color: var(--gray-500);
+  font-style: italic;
+  line-height: 1.45;
+  padding-left: 0.6rem;
+  border-left: 2.5px solid var(--warm-200);
+  margin: 0.35rem 0;
+}
+
+/* Map marker enhancements */
+@keyframes marker-pulse {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  70%  { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+.map-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-marker-dot {
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  position: relative;
+  z-index: 2;
+}
+.map-marker-halo {
+  position: absolute;
+  border-radius: 50%;
+  animation: marker-pulse 2.5s ease-out infinite;
+  z-index: 1;
+}
+.map-marker-label {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: white;
+  color: #333;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  pointer-events: none;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 3;
+}
+.map-marker-home .map-marker-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Cantonese Daycares & Preschools in San Francisco</h1>
+  <p>Comprehensive directory of daycares and preschools offering Cantonese language instruction or immersion</p>
+  <div class="header-meta">
+    <span>22 programs listed</span>
+    <span>Last updated: Feb 21, 2026</span>
+  </div>
+</div>
+
+<div class="stats-bar" id="statsBar"></div>
+
+<div class="controls">
+  <div class="controls-inner">
+    <div class="search-row">
+      <input type="text" class="search-box" id="searchBox" placeholder="Search by name, neighborhood, description...">
+      <button class="filter-toggle-btn" id="filterToggle">Filters &#x25BE;</button>
+    </div>
+    <div class="distance-bar">
+      <input type="text" class="distance-input" id="addressInput" value="4658 18th St, San Francisco, CA 94114" placeholder="Enter your address...">
+      <button class="distance-btn" id="distanceBtn">Calculate Distances</button>
+      <span class="distance-status" id="distanceStatus"></span>
+    </div>
+    <div class="filters">
+      <select class="filter-select" id="filterNeighborhood">
+        <option value="">All Neighborhoods</option>
+      </select>
+      <select class="filter-select" id="filterType">
+        <option value="">All Types</option>
+        <option value="center">Center</option>
+        <option value="family_home">Family Home</option>
+      </select>
+      <select class="filter-select" id="filterLanguage">
+        <option value="">All Language Programs</option>
+      </select>
+      <select class="filter-select" id="filterSpecial">
+        <option value="">All Programs</option>
+        <option value="nonprofit">Nonprofit</option>
+        <option value="subsidy">Accepts Subsidies</option>
+        <option value="headstart">Head Start</option>
+      </select>
+      <button class="clear-btn" id="sortNearest">Nearest First</button>
+      <button class="clear-btn" id="clearFilters">Clear Filters</button>
+      <span class="filter-count" id="filterCount"></span>
+    </div>
+  </div>
+</div>
+
+<div class="mobile-view-toggle" id="mobileToggle">
+  <button class="mobile-tab active" data-view="list">List</button>
+  <button class="mobile-tab" data-view="map">Map</button>
+</div>
+
+<div class="main">
+  <div class="card-panel" id="cardPanel"></div>
+  <div class="map-panel">
+    <div id="mapContainer"></div>
+  </div>
+  <div class="no-results" id="noResults" style="display:none;">No daycares match your current filters.</div>
+</div>
+
+<div class="footer">
+  Data compiled from Winnie.com, Yelp, Children's Council of SF, CA Community Care Licensing, and individual daycare websites.
+</div>
+
+<script>
+const DATA = {"metadata":{"title":"Cantonese Daycares & Preschools in San Francisco","description":"Comprehensive directory of daycares and preschools in San Francisco that offer Cantonese language instruction or immersion","last_updated":"2026-02-21","total_count":22,"sources":["Winnie.com","Yelp.com","Children's Council of SF","CA Community Care Licensing (CDSS)","Individual daycare websites","Care.com","Kinside","TrustedCare"]},"daycares":[{"id":1,"name":"Brilliant Kids School","type":"center","address":"506 Silver Avenue, San Francisco, CA 94112","neighborhood":"Silver Terrace","phone":"(415) 806-2208","email":"stsan002@gmail.com","website":"https://www.brilliantkidssf.com","hours":null,"ages_served":null,"capacity":null,"tuition":null,"languages":["Cantonese","English"],"language_program_type":"Cantonese Immersion","curriculum":"Language-rich environment emphasizing cognitive and emotional growth","meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Offers a dedicated Cantonese immersion program. Built on research showing that language exposure during early childhood strengthens cognitive development."},{"id":2,"name":"True Sunshine Preschool Center","type":"center","address":"777 Stockton Street, San Francisco, CA 94108","neighborhood":"Chinatown","phone":"(415) 956-4207","email":null,"website":"https://truesunshinepreschool.org","hours":"Mon-Fri 7:30 AM - 5:30 PM","ages_served":"2 years 9 months - 5 years","capacity":null,"tuition":null,"languages":["Cantonese","English"],"language_program_type":"Bilingual Cantonese/English","curriculum":"Project-based approach with circle time in both Cantonese and English.","meals_provided":"Free snack/meal program plus lunch","subsidies_accepted":null,"is_nonprofit":true,"description":"Award-winning non-profit preschool serving San Francisco's Chinatown community for 40+ years. Full-time year-round bilingual English/Cantonese preschool."},{"id":3,"name":"Wu Yee Children's Services - Lok Yuen Center","type":"center","address":"888 Clay Street, San Francisco, CA 94108","neighborhood":"Chinatown","phone":"(415) 321-3828","email":null,"website":"https://wuyee.org/center-based-care/lok-yuen-center/","hours":"Mon-Fri 8:00 AM - 5:00 PM","ages_served":"2-5 years","capacity":null,"tuition":"Head Start (free for eligible families) and tuition-based slots available","languages":["Cantonese","English"],"language_program_type":"Dual Language Learning (DLL) - Cantonese/English","curriculum":"Creative Curriculum with play-based design. Designated Dual Language Learning demonstration site by First 5 San Francisco.","meals_provided":"Yes","subsidies_accepted":"Head Start / Early Head Start","is_nonprofit":true,"description":"Lok Yuen means 'Happy Garden' in Cantonese. Designated by First 5 San Francisco as a Dual Language Learning demonstration site. Part of Wu Yee Children's Services, SF's largest Head Start provider."},{"id":4,"name":"Wu Yee Children's Services - Little Sprouts","type":"center","address":"831 Broadway, San Francisco, CA 94133","neighborhood":"Chinatown","phone":"(415) 321-3217","email":null,"website":"https://wuyee.org/child-care-options/wu-yee-centers/","hours":"Mon-Fri 8:00 AM - 5:00 PM","ages_served":"0-24 months","capacity":null,"tuition":"Head Start (free for eligible families) and tuition-based slots available","languages":["Cantonese","English","Mandarin"],"language_program_type":"Multilingual","curriculum":"Creative Curriculum, play-based. Wu Yee's only dedicated Early Head Start infant learning center.","meals_provided":"Yes","subsidies_accepted":"Early Head Start","is_nonprofit":true,"description":"Wu Yee's only dedicated Early Head Start early learning center, located in Chinatown. Over 50% of Wu Yee's staff are proficient in Cantonese and other Chinese dialects. 'Wu Yee' is a Cantonese phrase meaning 'protector of children.'"},{"id":5,"name":"Chinatown Community Children's Center - Clay Street","type":"center","address":"979 Clay Street, San Francisco, CA 94108","neighborhood":"Chinatown","phone":"(415) 986-2528","email":null,"website":"https://www.childrencenter.org","hours":"Mon-Fri 8:00 AM - 5:30 PM","ages_served":"2-5 years","capacity":84,"tuition":null,"languages":["Cantonese","English"],"language_program_type":"Bilingual/Bicultural","curriculum":"Early Childhood Development Program fostering kindergarten readiness","meals_provided":"Nutritious meals provided","subsidies_accepted":null,"is_nonprofit":true,"description":"Founded in 1972, one of the oldest non-profit early education centers in SF. Served 3,000+ families. Dedicated to new immigrant and bilingual/bicultural families."},{"id":6,"name":"Chinatown Community Children's Center - North Beach","type":"center","address":"715 Chestnut Street, San Francisco, CA 94133","neighborhood":"North Beach","phone":"(415) 771-4869","email":null,"website":"https://www.childrencenter.org","hours":"Mon-Fri 8:00 AM - 5:30 PM","ages_served":"2-5 years","capacity":null,"tuition":null,"languages":["Cantonese","English"],"language_program_type":"Bilingual/Bicultural","curriculum":"Early Childhood Development Program fostering kindergarten readiness","meals_provided":"Nutritious meals provided","subsidies_accepted":null,"is_nonprofit":true,"description":"Second location of CCCC. Same mission serving new immigrant and bilingual/bicultural families in San Francisco."},{"id":7,"name":"Happy Day Preschool","type":"center","address":"809 Taraval Street, San Francisco, CA 94116","neighborhood":"Parkside / Sunset","phone":"(415) 564-7999","email":null,"website":"https://www.happydaypreschool.com","hours":"Mon-Fri 7:30 AM - 6:00 PM","ages_served":"Infants, toddlers, pre-K, school-age","capacity":null,"tuition":null,"languages":["Cantonese","English"],"language_program_type":"Cantonese Language Immersion","curriculum":"Cantonese and English literacy skills, math, science, art, social studies, and music","meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Daycare center providing Cantonese language immersion and education. Walk-ins welcomed. Curriculum focuses on Cantonese and English literacy skills alongside STEM and arts."},{"id":8,"name":"Little Star Preschool Too","type":"center","address":"1105 Quintara Street, San Francisco, CA 94116","neighborhood":"Sunset","phone":"(415) 731-7933","email":"littlestarpreschooltoo@gmail.com","website":"http://www.littlestarpreschoolsf.com","hours":"Mon-Fri 7:30 AM - 5:30 PM","ages_served":"2-6 years","capacity":null,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Trilingual - Optional Cantonese or Mandarin second language program","curriculum":"Play-based licensed program. Develops social, cognitive, motor, emotional, and language skills for kindergarten readiness.","meals_provided":"Morning and afternoon snacks plus hot lunch","subsidies_accepted":null,"is_nonprofit":false,"description":"Trilingual preschool (English, Cantonese, Mandarin) in the Sunset district since 1995. Annual assessments, parent-teacher conferences, enrichment activities on and off campus."},{"id":9,"name":"Just Kids Preschool","type":"center","address":"5727 Geary Boulevard, San Francisco, CA 94121","neighborhood":"Richmond","phone":null,"email":null,"website":"https://justkidspreschool.org","hours":"Mon-Fri 8:00 AM - 5:00 PM","ages_served":"2-5 years","capacity":null,"tuition":"$1,200 - $1,650/month (deposit: $8,700)","languages":["Mandarin","English"],"language_program_type":"Chinese Immersion (50% Cantonese / 50% Mandarin reported)","curriculum":"Language immersion, Montessori, Reggio Emilia, Waldorf blended approach","meals_provided":null,"subsidies_accepted":"Early Learning Scholarship Vouchers","is_nonprofit":false,"description":"100% Chinese immersion program. Multiple curriculum approaches blended. Accepts Early Learning Scholarship Vouchers."},{"id":10,"name":"Starry Family Childcare","type":"family_home","address":"1611 Powell Street, San Francisco, CA 94133","neighborhood":"North Beach / Chinatown","phone":"(415) 823-2233 / (415) 770-4482","email":"shumeitan0529@gmail.com","website":"https://starryfamilychildcare.com","hours":"Mon-Fri 8:30 AM - 5:30 PM","ages_served":"2 months - 6 years","capacity":6,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Trilingual","curriculum":"Play-based: music, dramatic play, art/crafts, stories, science, senses, sports, field trips","meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Licensed family home daycare in North Beach/Chinatown area. Trilingual environment (Cantonese, Mandarin, English). Focus on physical, cognitive, language, social, and emotional development."},{"id":11,"name":"Rising Star Family Childcare","type":"family_home","address":"33 Seneca Avenue, San Francisco, CA 94112","neighborhood":"Excelsior","phone":"(415) 984-0455","email":"pearlwuwang@gmail.com","website":"https://risingstardaycare.com","hours":"Flexible - daycare and nightcare available 365 days/year","ages_served":"Infants (0-2) and Toddlers (2+)","capacity":null,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Bilingual Chinese (Cantonese & Mandarin) / English","curriculum":"Play-based: music, dramatic play, art/crafts, stories, science, senses, sports, field trips","meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Licensed bilingual family childcare. Unique offering of flexible hours including nightcare and 365-day availability. Focus on expanding children's language ability and cultural diversity."},{"id":12,"name":"Modern Education Family Childcare","type":"family_home","address_locations":[{"name":"Mission Bay","address":"Channel St & 4th St, San Francisco, CA 94158","license":"384002603","status":"Available"},{"name":"Outer Sunset","address":"48th Ave & Moraga St, San Francisco, CA 94122","license":"384002458","status":"Available"},{"name":"Portola","address":"Sweeny St & Dunsmuir St, San Francisco, CA 94134","license":"384004036","status":"1 spot"},{"name":"SoMa","address":"Folsom St & 4th St, San Francisco, CA 94107","license":"384004037","status":"Waitlist"},{"name":"Hayes Valley","address":"Hickory St & Laguna St, San Francisco, CA 94102","license":"384004210","status":"Available"},{"name":"South San Francisco","address":"Alta Mesa Dr & El Campo Dr, SSF, CA 94080","license":"414005019","status":"Enrolling 0-4 yrs"}],"neighborhood":"Multiple Locations","phone":"(415) 729-4132","email":null,"website":"https://www.daycaresf.com","hours":"Mon-Fri 8:00 AM - 5:30 PM","ages_served":"3 months - 4 years","capacity":null,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Trilingual / Cantonese Immersion (varies by location)","curriculum":"Developmentally appropriate activities and play-based learning","meals_provided":null,"subsidies_accepted":"CalWORKs, CAAP, Early Learning for All (ELFA), state childcare subsidies and vouchers","is_nonprofit":false,"description":"Network of 6 licensed family daycare homes across SF Bay Area. Staff fluent in English, Mandarin & Cantonese. Accepts all major state subsidies."},{"id":13,"name":"Little Crystal Learning Child Care","type":"family_home","address":"690 Long Bridge Street, #118, San Francisco, CA 94158","neighborhood":"Mission Bay","phone":"(415) 806-3008","email":null,"website":null,"hours":"Mon-Fri 8:00 AM - 5:30 PM","ages_served":"5 months - 5 years","capacity":8,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Bilingual Chinese (Cantonese or Mandarin) / English","curriculum":null,"meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Licensed family home daycare in Mission Bay. Chinese (Mandarin or Cantonese) bilingual care."},{"id":14,"name":"Learn n' Play","type":"family_home","address":"1655 Powell Street, San Francisco, CA 94133","neighborhood":"North Beach / Chinatown","phone":null,"email":"learnnplaysf@gmail.com","website":"https://learnplaysf.com","hours":"Mon-Fri 8:00 AM - 6:00 PM; Weekends by prior scheduling","ages_served":"1 month - 5 years","capacity":null,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Trilingual","curriculum":"Play-based: playground visits, library time, sing-alongs, healthy meals","meals_provided":"Healthy meals provided","subsidies_accepted":null,"is_nonprofit":false,"description":"Home-based bilingual childcare with 17 years of community service. Offers flexible care options including overnight and weekend care."},{"id":15,"name":"Little Sunshine Childcare","type":"family_home","address":"308 Jules Avenue, San Francisco, CA 94112","neighborhood":"Excelsior","phone":"(415) 657-3328","email":null,"website":"https://www.littlesunshinechildcare.com","hours":null,"ages_served":"Newborn - 8 years","capacity":null,"tuition":"Described as 'reasonable and affordable'","languages":["Cantonese","Mandarin","English"],"language_program_type":"Bilingual - Cantonese and Mandarin fluent","curriculum":"Focus on physical, emotional, social and mental growth. Music development (piano), art and crafts, reading, indoor/outdoor activities","meals_provided":"Nutritionally planned meals","subsidies_accepted":null,"is_nonprofit":false,"description":"Family home daycare operated by Ada, a professional pre-school educator with 17 years of experience. Fluent in Cantonese and Mandarin. Specializes in music development and nutrition-focused care."},{"id":16,"name":"Little Sunshine Family Daycare","type":"family_home","address":"1455 32nd Avenue, San Francisco, CA 94122","neighborhood":"Sunset","phone":"(415) 734-8311","email":null,"website":null,"hours":"Mon-Fri 8:00 AM - 6:00 PM","ages_served":null,"capacity":8,"tuition":null,"languages":["Cantonese","Mandarin","English"],"language_program_type":"Cantonese and Mandarin speaking","curriculum":null,"meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Licensed family daycare home in the Sunset district. Staff speak Cantonese and Mandarin. Licensed since December 2019."},{"id":17,"name":"Hong's Family Daycare","type":"family_home","address":"1642 24th Avenue, San Francisco, CA 94122","neighborhood":"Central Sunset","phone":"(415) 244-5563","email":null,"website":"https://hongxiaohansen.wixsite.com/hongsfamilydaycare","hours":"Mon-Fri 8:30 AM - 5:30 PM","ages_served":"Infants and toddlers","capacity":null,"tuition":null,"languages":["Mandarin","Cantonese","English"],"language_program_type":"Trilingual (primarily Mandarin with Cantonese)","curriculum":null,"meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Licensed family daycare and preschool with 30 years of experience. Children learn and play in English, Mandarin, and Cantonese."},{"id":18,"name":"Little Dolphin Family Day Care","type":"family_home","address":"1822 39th Avenue, San Francisco, CA 94122","neighborhood":"Sunset","phone":"(415) 359-8541","email":null,"website":null,"hours":"Mon-Fri 8:00 AM - 5:30 PM","ages_served":null,"capacity":null,"tuition":null,"languages":["Mandarin","Cantonese","English"],"language_program_type":"Chinese language immersion","curriculum":null,"meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"rating_yelp":5.0,"description":"Family daycare in the Sunset district. Highly rated (5.0 on Yelp with 24 reviews). Listed among top Cantonese preschools in SF."},{"id":19,"name":"Panda Garden Children's Center","type":"center","address":"2570 23rd Avenue, San Francisco, CA 94116","neighborhood":"Sunset","phone":"(415) 568-8402","email":null,"website":"https://www.pandagardensf.com","hours":"Mon-Fri 8:00 AM - 5:30 PM","ages_served":"12 months - 5 years","capacity":null,"tuition":null,"languages":["Mandarin","Cantonese","English"],"language_program_type":"Mandarin immersion (some Cantonese reported by parents)","curriculum":"Reggio Emilia inspired, emergent/interactive/content-rich curriculum. 1:4 teacher-student ratio.","meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Mandarin-immersion childcare center in the Sunset district since 2011. Reggio Emilia approach with small groups. Parents report children also learn Cantonese."},{"id":20,"name":"Kai Ming Head Start","type":"center","address_locations":[{"name":"Dr. T.K.L (Chinatown)","address":"950 Powell St, San Francisco, CA 94108","phone":"(415) 766-6092"},{"name":"Broadway","address":"820 Battery St, San Francisco, CA 94111","phone":"(415) 982-4570"},{"name":"North Beach (DLL Site)","address":"1170 Columbus Ave, San Francisco, CA 94133","phone":"(415) 931-1088"},{"name":"Rainbow (Chinatown)","address":"799 Pacific Ave, San Francisco, CA 94133","phone":"(415) 982-6522"},{"name":"Geary","address":"6221 Geary Blvd, San Francisco, CA 94121","phone":"(415) 387-3133"},{"name":"Richmond","address":"426 33rd Ave, San Francisco, CA 94121","phone":"(415) 386-3096"},{"name":"St. Luke's","address":"1755 Clay St, San Francisco, CA 94109","phone":"(415) 690-1014"},{"name":"Sunset","address":"2800 Taraval St, San Francisco, CA 94116","phone":"(415) 759-8980"},{"name":"PMsquare","address":"671 China Basin St, San Francisco, CA 94158","phone":"(415) 387-3688"}],"neighborhood":"Multiple Locations","phone":"(415) 982-4777","email":null,"website":"https://kaiming.org","hours":"Mon-Fri 8:00 AM - 4:30 PM","ages_served":"3 months - 5 years","capacity":null,"tuition":"Free for income-eligible families (Head Start)","languages":["Cantonese","Mandarin","English","Spanish"],"language_program_type":"Dual-language curriculum; North Beach is designated DLL demonstration site","curriculum":"Dual-language, culturally relevant, family-centric approach.","meals_provided":"Nutritious meals provided","subsidies_accepted":"Head Start / Early Head Start (free for eligible families)","is_nonprofit":true,"description":"Founded 1975. SF's major Head Start provider with 9 centers citywide. Offers free or low-cost preschool and infant/toddler care for eligible families. North Beach center is a Dual Language Learning demonstration site."},{"id":21,"name":"Wu Yee Children's Services - Additional Centers","type":"center","address_locations":[{"name":"Generations (North Beach)","address":"1010 Montgomery St, SF, CA 94133","phone":"(415) 529-1345","ages":"3-5 years"},{"name":"Golden Gate (Tenderloin)","address":"177 Golden Gate Ave, SF, CA 94102","phone":"(415) 321-3855","ages":"2-5 years"},{"name":"Westside (Western Addition)","address":"2400 Post St, SF, CA 94115","phone":"(415) 346-5820","ages":"2-5 years"},{"name":"Ocean (Excelsior)","address":"1820 Alemany Blvd, SF, CA 94112","phone":"(415) 409-3101","ages":"0-5 years"},{"name":"OMI","address":"1111 Junipero Serra Blvd, SF, CA 94132","phone":"(415) 329-1502","ages":"2-5 years"},{"name":"Sunnydale (Visitacion Valley)","address":"1530 Sunnydale Ave, SF, CA 94134","phone":"(415) 321-3844","ages":"0-5 years"},{"name":"Southeast (Bayview)","address":"1550 Evans Ave, SF, CA 94124","phone":"(415) 282-8200","ages":"0-5 years"},{"name":"Bayview","address":"1601 Lane St, SF, CA 94124","phone":"(415) 655-9567","ages":"3-5 years"},{"name":"Hunters Point/Kirkwood","address":"729 Kirkwood Ave, SF, CA 94124","phone":"(415) 822-5505","ages":"0-5 years"},{"name":"Scotia (Silver Terrace)","address":"175 Scotia Ave, SF, CA 94124","phone":"(415) 285-3603","ages":"0-5 years"}],"neighborhood":"Multiple Locations","phone":"(415) 677-0100","email":null,"website":"https://wuyee.org","hours":"Full-day, year-round","ages_served":"0-5 years","capacity":null,"tuition":"Head Start (free for eligible) and tuition-based slots","languages":["Cantonese","Mandarin","English","Spanish","Tagalog"],"language_program_type":"Multilingual staff; Cantonese widely spoken","curriculum":"Creative Curriculum, play-based","meals_provided":"Yes","subsidies_accepted":"Head Start / Early Head Start","is_nonprofit":true,"description":"Wu Yee operates 12 centers across SF. Over 50% of all staff are proficient in Cantonese. 'Wu Yee' is a Cantonese phrase meaning 'protector of children.'"},{"id":22,"name":"Little Leaf Daycare","type":"family_home","address":null,"neighborhood":"West of Twin Peaks","phone":null,"email":null,"website":null,"hours":null,"ages_served":null,"capacity":null,"tuition":null,"languages":["Mandarin","Cantonese","English"],"language_program_type":"Mandarin immersion with Cantonese available","curriculum":null,"meals_provided":null,"subsidies_accepted":null,"is_nonprofit":false,"description":"Childcare center with specialized Mandarin immersion program. Located in West of Twin Peaks area."}]};
+
+// ---- State ----
+let filters = { search: '', neighborhood: '', type: '', language: '', special: '' };
+
+let map = null;
+let mapMarkers = [];
+let markersByDaycareId = {};
+let distances = {};
+let sortNearest = false;
+let originCoords = [37.7607, -122.4378];
+let originMarker = null;
+let expandedDaycareId = null;
+const DEFAULT_ADDRESS = '4658 18th St, San Francisco, CA 94114';
+
+// Coordinates for each daycare (and sub-locations for multi-location entries)
+const COORDS = {
+  1:  [[37.7283, -122.4147]],  // 506 Silver Ave
+  2:  [[37.7930, -122.4080]],  // 777 Stockton St
+  3:  [[37.7945, -122.4070]],  // 888 Clay St
+  4:  [[37.7978, -122.4100]],  // 831 Broadway
+  5:  [[37.7948, -122.4085]],  // 979 Clay St
+  6:  [[37.8030, -122.4140]],  // 715 Chestnut St
+  7:  [[37.7435, -122.4700]],  // 809 Taraval St
+  8:  [[37.7482, -122.4730]],  // 1105 Quintara St
+  9:  [[37.7805, -122.4850]],  // 5727 Geary Blvd
+  10: [[37.8005, -122.4110]],  // 1611 Powell St
+  11: [[37.7230, -122.4320]],  // 33 Seneca Ave
+  12: [                         // Modern Education - 6 locations
+    [37.7730, -122.3910],  // Mission Bay
+    [37.7535, -122.5060],  // Outer Sunset
+    [37.7210, -122.4060],  // Portola
+    [37.7810, -122.4010],  // SoMa
+    [37.7740, -122.4260],  // Hayes Valley
+    [37.6550, -122.4260],  // South SF
+  ],
+  13: [[37.7710, -122.3910]],  // 690 Long Bridge St
+  14: [[37.8010, -122.4110]],  // 1655 Powell St
+  15: [[37.7190, -122.4360]],  // 308 Jules Ave
+  16: [[37.7540, -122.4900]],  // 1455 32nd Ave
+  17: [[37.7565, -122.4820]],  // 1642 24th Ave
+  18: [[37.7520, -122.4970]],  // 1822 39th Ave
+  19: [[37.7470, -122.4810]],  // 2570 23rd Ave
+  20: [                         // Kai Ming - 9 locations
+    [37.7940, -122.4110],  // Dr. T.K.L (Chinatown)
+    [37.7960, -122.4010],  // Broadway
+    [37.8010, -122.4160],  // North Beach (DLL)
+    [37.7970, -122.4090],  // Rainbow (Chinatown)
+    [37.7800, -122.4860],  // Geary
+    [37.7810, -122.4920],  // Richmond
+    [37.7910, -122.4230],  // St. Luke's
+    [37.7420, -122.4780],  // Sunset
+    [37.7720, -122.3880],  // PMsquare
+  ],
+  21: [                         // Wu Yee Additional - 10 locations
+    [37.8000, -122.4040],  // Generations (North Beach)
+    [37.7820, -122.4140],  // Golden Gate (Tenderloin)
+    [37.7850, -122.4370],  // Westside (Western Addition)
+    [37.7190, -122.4260],  // Ocean (Excelsior)
+    [37.7270, -122.4540],  // OMI
+    [37.7120, -122.4170],  // Sunnydale
+    [37.7380, -122.3870],  // Southeast (Bayview)
+    [37.7350, -122.3890],  // Bayview
+    [37.7340, -122.3810],  // Hunters Point/Kirkwood
+    [37.7290, -122.3960],  // Scotia (Silver Terrace)
+  ],
+  22: [[37.7480, -122.4570]],  // West of Twin Peaks (approx)
+};
+
+// ---- Reviews ----
+const REVIEWS = {
+  1:  { google_rating: 5.0, google_count: 5, yelp_rating: null, yelp_count: 10, quotes: ["Best homecare facility in SF, a hidden gem", "Clean, spacious and bright with daily photo updates"] },
+  2:  { google_rating: null, google_count: null, yelp_rating: null, yelp_count: null, quotes: ["Teachers are always so pleasant and upbeat"] },
+  3:  { google_rating: 3.5, google_count: 4, yelp_rating: null, yelp_count: null, quotes: [] },
+  5:  { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: 2, quotes: ["The teachers are great and nice", "Classes packed with activities, cooking, and field trips"] },
+  6:  { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: null, quotes: ["Student to teacher ratio is so ideal being in the city"] },
+  7:  { google_rating: null, google_count: null, yelp_rating: null, yelp_count: 32, quotes: ["Provides a happy, loving, stimulating environment"] },
+  8:  { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: 54, quotes: ["If I could give this preschool more than five stars, I would", "Feels just like a big family; teachers are fantastic"] },
+  9:  { google_rating: null, google_count: null, yelp_rating: null, yelp_count: 10, quotes: ["Great preschool with Chinese immersion", "Kids came home spontaneously speaking Mandarin"] },
+  10: { google_rating: null, google_count: null, yelp_rating: null, yelp_count: null, quotes: ["Most kind, caring, loving, patient and thoughtful people"] },
+  11: { google_rating: null, google_count: null, yelp_rating: null, yelp_count: null, quotes: ["Children absolutely love her and light up when they see her"] },
+  12: { google_rating: 5.0, google_count: 10, yelp_rating: null, yelp_count: 50, quotes: ["Modern Education has been by far the best", "Warm and welcoming with a positive vibe"] },
+  13: { google_rating: 5.0, google_count: 8, yelp_rating: 5.0, yelp_count: 20, quotes: ["Quality, clean, warm and safe care for children"] },
+  14: { google_rating: null, google_count: null, yelp_rating: null, yelp_count: null, quotes: ["Lisa gives the kids unending love, takes them out every day"] },
+  15: { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: 43, quotes: ["Ada is caring, patient and will help correct bad habits", "Felt like an extension of our home"] },
+  16: { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: 42, quotes: ["Kelly is so kind and warm hearted, brings joy to her work", "Our son loves Kelly dearly, excited to see her at drop-off"] },
+  17: { google_rating: 5.0, google_count: 6, yelp_rating: 5.0, yelp_count: 47, quotes: ["Heartwarming to see him communicating in Chinese", "Hong is warm and welcoming, bright and clean with fun toys"] },
+  18: { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: 26, quotes: ["Little Dolphin has been amazing for our daughter", "Xiao and Jason are truly wonderful people"] },
+  19: { google_rating: null, google_count: null, yelp_rating: 5.0, yelp_count: 26, quotes: ["Best decision we've made for Mandarin immersion", "From day one, Panda was like a second home"] },
+  20: { google_rating: null, google_count: null, yelp_rating: null, yelp_count: null, quotes: ["Staff are AMAZING kind and hard working, obviously passionate", "Teachers are full of patience, love and kindness"] },
+  22: { google_rating: null, google_count: null, yelp_rating: null, yelp_count: null, quotes: ["A wonderful, warm environment; daughter loves going", "Small class size, lots of personal attention"] },
+};
+
+// ---- Distance Calculation ----
+function buildDestCoordsList() {
+  const destCoords = [];
+  const indexMap = [];
+  DATA.daycares.forEach(dc => {
+    const coords = COORDS[dc.id];
+    if (!coords) return;
+    coords.forEach((c, i) => {
+      destCoords.push(c);
+      indexMap.push({ daycareId: dc.id, subIndex: i });
+    });
+  });
+  return { destCoords, indexMap };
+}
+
+async function calculateDistances(origin) {
+  const { destCoords, indexMap } = buildDestCoordsList();
+  const originStr = `${origin[1]},${origin[0]}`;
+  const destStrs = destCoords.map(c => `${c[1]},${c[0]}`);
+  const allCoords = [originStr, ...destStrs].join(';');
+  const url = `https://router.project-osrm.org/table/v1/driving/${allCoords}?sources=0&annotations=distance,duration`;
+
+  const resp = await fetch(url);
+  const data = await resp.json();
+  if (data.code !== 'Ok') throw new Error('OSRM error: ' + data.code);
+
+  const distRow = data.distances[0];
+  const durRow = data.durations[0];
+  const newDistances = {};
+
+  indexMap.forEach((entry, i) => {
+    const d = distRow[i + 1];
+    const t = durRow[i + 1];
+    if (d === null || t === null) return;
+    const mi = d / 1609.34;
+    const min = t / 60;
+    if (!newDistances[entry.daycareId] || mi < newDistances[entry.daycareId].distance_mi) {
+      newDistances[entry.daycareId] = { distance_mi: mi, duration_min: min };
+    }
+  });
+
+  distances = newDistances;
+}
+
+async function geocodeAndCalculate() {
+  const input = document.getElementById('addressInput');
+  const status = document.getElementById('distanceStatus');
+  const btn = document.getElementById('distanceBtn');
+  const addr = input.value.trim();
+  if (!addr) return;
+
+  btn.disabled = true;
+  status.textContent = 'Calculating...';
+  status.style.color = 'var(--gray-500)';
+
+  try {
+    const geoUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`;
+    const geoResp = await fetch(geoUrl, { headers: { 'User-Agent': 'DaycareDirectory/1.0' } });
+    const geoData = await geoResp.json();
+
+    if (!geoData.length) {
+      status.textContent = 'Address not found.';
+      status.style.color = 'var(--accent)';
+      btn.disabled = false;
+      return;
+    }
+
+    originCoords = [parseFloat(geoData[0].lat), parseFloat(geoData[0].lon)];
+    await calculateDistances(originCoords);
+
+    status.textContent = `From: ${addr}`;
+    status.style.color = 'var(--green)';
+    render();
+  } catch (e) {
+    status.textContent = 'Error calculating distances.';
+    status.style.color = 'var(--accent)';
+    console.error(e);
+  }
+  btn.disabled = false;
+}
+
+async function autoCalculateDistances() {
+  const status = document.getElementById('distanceStatus');
+  status.textContent = 'Calculating distances...';
+  status.style.color = 'var(--gray-500)';
+
+  try {
+    await calculateDistances(originCoords);
+    status.textContent = `From: ${DEFAULT_ADDRESS}`;
+    status.style.color = 'var(--green)';
+    render();
+  } catch (e) {
+    status.textContent = 'Could not calculate distances.';
+    status.style.color = 'var(--accent)';
+    console.error(e);
+  }
+}
+
+// ---- Helpers ----
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function getNeighborhood(dc) {
+  return dc.neighborhood || (dc.address_locations ? 'Multiple Locations' : 'Unknown');
+}
+
+function getNeighborhoods() {
+  const set = new Set();
+  DATA.daycares.forEach(dc => {
+    const n = getNeighborhood(dc);
+    if (n !== 'Multiple Locations') set.add(n);
+  });
+  return ['Multiple Locations', ...Array.from(set).sort()];
+}
+
+function getLanguagePrograms() {
+  const set = new Set();
+  DATA.daycares.forEach(dc => {
+    if (dc.language_program_type) set.add(dc.language_program_type);
+  });
+  return Array.from(set).sort();
+}
+
+function matchesFilters(dc) {
+  const { search, neighborhood, type, language, special } = filters;
+
+  if (search) {
+    const q = search.toLowerCase();
+    const searchable = [dc.name, getNeighborhood(dc), dc.description, dc.language_program_type, dc.curriculum, (dc.languages||[]).join(' ')].filter(Boolean).join(' ').toLowerCase();
+    if (!searchable.includes(q)) return false;
+  }
+  if (neighborhood && getNeighborhood(dc) !== neighborhood) return false;
+  if (type && dc.type !== type) return false;
+  if (language && dc.language_program_type !== language) return false;
+  if (special === 'nonprofit' && !dc.is_nonprofit) return false;
+  if (special === 'subsidy' && !dc.subsidies_accepted) return false;
+  if (special === 'headstart' && !(dc.subsidies_accepted && dc.subsidies_accepted.toLowerCase().includes('head start'))) return false;
+
+  return true;
+}
+
+function googleMapsUrl(name) {
+  return 'https://www.google.com/maps/search/' + encodeURIComponent(name + ' San Francisco CA');
+}
+function yelpSearchUrl(name) {
+  return 'https://www.yelp.com/search?find_desc=' + encodeURIComponent(name) + '&find_loc=San+Francisco%2C+CA';
+}
+
+// ---- Render ----
+function renderCard(dc) {
+  const typeBadge = dc.type === 'center'
+    ? '<span class="badge badge-center">Center</span>'
+    : '<span class="badge badge-family">Family Home</span>';
+  const nonprofitBadge = dc.is_nonprofit ? '<span class="badge badge-nonprofit">Nonprofit</span>' : '';
+  const subsidyBadge = dc.subsidies_accepted ? '<span class="badge badge-subsidy">Subsidies</span>' : '';
+
+  const address = dc.address ? esc(dc.address) : null;
+  const hood = getNeighborhood(dc);
+
+  // --- Summary rows (always visible) ---
+  let summaryRows = '';
+
+  // Distance
+  const dist = distances[dc.id];
+  if (dist) {
+    summaryRows += `<div class="distance-row">\u{1F697} ${dist.distance_mi.toFixed(1)} mi \u00B7 ${Math.round(dist.duration_min)} min drive</div>`;
+  }
+
+  // Neighborhood (compact)
+  summaryRows += `<div class="card-row"><div class="card-row-icon">\u{1F4CD}</div><div class="card-row-content"><span style="color:var(--warm-600);font-weight:600;font-size:0.8rem;">${esc(hood)}</span></div></div>`;
+
+  // Language program type (compact)
+  if (dc.language_program_type) {
+    summaryRows += `<div class="card-row"><div class="card-row-icon">\u{1F5E3}</div><div class="card-row-content"><strong>${esc(dc.language_program_type)}</strong></div></div>`;
+  }
+
+  // --- Detail rows (hidden until expanded) ---
+  let detailRows = '';
+
+  // Full address
+  if (address) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F4CD}</div><div class="card-row-content">${address}</div></div>`;
+  }
+
+  // Phone
+  if (dc.phone) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F4DE}</div><div class="card-row-content"><a href="tel:${esc(dc.phone.split('/')[0].trim())}">${esc(dc.phone)}</a></div></div>`;
+  }
+
+  // Email
+  if (dc.email) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{2709}\u{FE0F}</div><div class="card-row-content"><a href="mailto:${esc(dc.email)}">${esc(dc.email)}</a></div></div>`;
+  }
+
+  // Website
+  if (dc.website) {
+    const host = dc.website.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F310}</div><div class="card-row-content"><a href="${esc(dc.website)}" target="_blank" rel="noopener">${esc(host)}</a></div></div>`;
+  }
+
+  // Hours
+  if (dc.hours) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F552}</div><div class="card-row-content">${esc(dc.hours)}</div></div>`;
+  }
+
+  // Ages
+  if (dc.ages_served) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F476}</div><div class="card-row-content">${esc(dc.ages_served)}</div></div>`;
+  }
+
+  // Capacity
+  if (dc.capacity) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F465}</div><div class="card-row-content">Capacity: ${dc.capacity}</div></div>`;
+  }
+
+  // Full languages row
+  if (dc.languages && dc.languages.length) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F5E3}</div><div class="card-row-content"><strong>${esc(dc.language_program_type || dc.languages.join(', '))}</strong><br>${esc(dc.languages.join(', '))}</div></div>`;
+  }
+
+  // Tuition
+  if (dc.tuition) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F4B0}</div><div class="card-row-content">${esc(dc.tuition)}</div></div>`;
+  }
+
+  // Subsidies
+  if (dc.subsidies_accepted) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{2705}</div><div class="card-row-content">${esc(dc.subsidies_accepted)}</div></div>`;
+  }
+
+  // Curriculum
+  if (dc.curriculum) {
+    detailRows += `<div class="card-section-title">Curriculum</div>`;
+    detailRows += `<div class="card-row"><div class="card-row-content" style="font-size:0.82rem;">${esc(dc.curriculum)}</div></div>`;
+  }
+
+  // Meals
+  if (dc.meals_provided) {
+    detailRows += `<div class="card-row"><div class="card-row-icon">\u{1F372}</div><div class="card-row-content">${esc(dc.meals_provided)}</div></div>`;
+  }
+
+  // Multi-location
+  let locationsHtml = '';
+  if (dc.address_locations && dc.address_locations.length) {
+    const locId = 'loc-' + dc.id;
+    let locItems = dc.address_locations.map(loc => {
+      let detail = esc(loc.address);
+      if (loc.phone) detail += ` | ${esc(loc.phone)}`;
+      if (loc.ages) detail += ` | Ages: ${esc(loc.ages)}`;
+      if (loc.status) detail += ` | <strong>${esc(loc.status)}</strong>`;
+      if (loc.license) detail += ` | Lic: ${esc(loc.license)}`;
+      return `<div class="location-item"><span class="location-name">${esc(loc.name)}</span><br><span class="location-detail">${detail}</span></div>`;
+    }).join('');
+
+    locationsHtml = `
+      <div style="padding:0.5rem 1.25rem 0.75rem;">
+        <button class="locations-toggle" onclick="toggleLocations('${locId}', this)">
+          <span class="arrow">\u25B6</span> ${dc.address_locations.length} Locations
+        </button>
+        <div class="locations-list" id="${locId}">${locItems}</div>
+      </div>`;
+  }
+
+  // Rating badges in header
+  const review = REVIEWS[dc.id];
+  let ratingHtml = '';
+  if (review) {
+    const ratingStyle = 'font-size:0.78rem;color:var(--warm-500);font-weight:600;margin-left:0.4rem;text-decoration:none;';
+    if (review.yelp_rating) ratingHtml += `<a href="${esc(yelpSearchUrl(dc.name))}" target="_blank" rel="noopener" style="${ratingStyle}">\u2605 ${review.yelp_rating}</a>`;
+    else if (review.google_rating) ratingHtml += `<a href="${esc(googleMapsUrl(dc.name))}" target="_blank" rel="noopener" style="${ratingStyle}">\u2605 ${review.google_rating}</a>`;
+  }
+
+  // Reviews section
+  let reviewsHtml = '';
+  if (review) {
+    const hasRatings = review.google_rating || review.google_count || review.yelp_rating || review.yelp_count;
+    const hasQuotes = review.quotes && review.quotes.length;
+    if (hasRatings || hasQuotes) {
+      reviewsHtml = '<div class="card-reviews">';
+      if (hasRatings) {
+        reviewsHtml += '<div class="review-ratings">';
+        if (review.google_rating || review.google_count) {
+          const gUrl = esc(googleMapsUrl(dc.name));
+          reviewsHtml += `<a class="review-rating" href="${gUrl}" target="_blank" rel="noopener"><span class="review-stars">\u2605</span> ${review.google_rating || '\u2014'}`;
+          reviewsHtml += ` <span class="review-platform">Google${review.google_count ? ' (' + review.google_count + ')' : ''}</span></a>`;
+        }
+        if (review.yelp_rating || review.yelp_count) {
+          const yUrl = esc(yelpSearchUrl(dc.name));
+          reviewsHtml += `<a class="review-rating" href="${yUrl}" target="_blank" rel="noopener"><span class="review-stars">\u2605</span> ${review.yelp_rating || '\u2014'}`;
+          reviewsHtml += ` <span class="review-platform">Yelp${review.yelp_count ? ' (' + review.yelp_count + ')' : ''}</span></a>`;
+        }
+        reviewsHtml += '</div>';
+      }
+      if (hasQuotes) {
+        review.quotes.forEach(q => {
+          reviewsHtml += `<div class="review-quote">\u201C${esc(q)}\u201D</div>`;
+        });
+      }
+      reviewsHtml += '</div>';
+    }
+  }
+
+  const expandedClass = dc.id == expandedDaycareId ? ' expanded' : '';
+
+  return `
+    <div class="card${expandedClass}" data-daycare-id="${dc.id}">
+      <div class="card-header">
+        <div class="card-name">${esc(dc.name)}${ratingHtml}</div>
+        <div class="card-badges">${typeBadge}${nonprofitBadge}${subsidyBadge}</div>
+      </div>
+      <div class="card-body">${summaryRows}</div>
+      <div class="card-expand-hint">${expandedClass ? '\u25B4 less' : '\u25BE more'}</div>
+      <div class="card-details">
+        <div class="card-body">${detailRows}</div>
+        ${locationsHtml}
+        ${reviewsHtml}
+        ${dc.description ? `<div class="card-desc">${esc(dc.description)}</div>` : ''}
+      </div>
+    </div>`;
+}
+
+function render() {
+  const filtered = DATA.daycares.filter(matchesFilters);
+
+  if (sortNearest && Object.keys(distances).length) {
+    filtered.sort((a, b) => {
+      const da = distances[a.id] ? distances[a.id].distance_mi : Infinity;
+      const db = distances[b.id] ? distances[b.id].distance_mi : Infinity;
+      return da - db;
+    });
+  }
+
+  const countEl = document.getElementById('filterCount');
+  countEl.textContent = `Showing ${filtered.length} of ${DATA.daycares.length}`;
+
+  const cardPanel = document.getElementById('cardPanel');
+  const noEl = document.getElementById('noResults');
+
+  if (filtered.length === 0) {
+    noEl.style.display = 'block';
+    cardPanel.innerHTML = '';
+    return;
+  }
+  noEl.style.display = 'none';
+
+  // Render cards into card panel
+  cardPanel.innerHTML = filtered.map(renderCard).join('');
+
+  // Always render map
+  renderMap(filtered);
+
+  // Attach card ↔ map interaction listeners
+  cardPanel.querySelectorAll('.card[data-daycare-id]').forEach(cardEl => {
+    const dcId = cardEl.getAttribute('data-daycare-id');
+    cardEl.addEventListener('mouseenter', () => highlightDaycare(dcId));
+    cardEl.addEventListener('mouseleave', () => unhighlightDaycare(dcId));
+    cardEl.addEventListener('click', (e) => {
+      // Don't toggle when clicking links or buttons inside the card
+      if (e.target.closest('a, button')) return;
+      const isExpanding = !cardEl.classList.contains('expanded');
+
+      // Accordion: collapse previously expanded card
+      if (isExpanding) {
+        const prev = cardPanel.querySelector('.card.expanded');
+        if (prev && prev !== cardEl) {
+          prev.classList.remove('expanded');
+          prev.querySelector('.card-expand-hint').textContent = '\u25BE more';
+          const prevId = prev.getAttribute('data-daycare-id');
+          const prevMarkers = markersByDaycareId[prevId];
+          if (prevMarkers) prevMarkers.forEach(m => m.closePopup());
+        }
+      }
+
+      cardEl.classList.toggle('expanded');
+      expandedDaycareId = isExpanding ? Number(dcId) : null;
+      cardEl.querySelector('.card-expand-hint').textContent = isExpanding ? '\u25B4 less' : '\u25BE more';
+
+      if (isExpanding) {
+        selectDaycare(dcId);
+        setTimeout(() => cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+      } else {
+        // Close popup when collapsing
+        const markers = markersByDaycareId[dcId];
+        if (markers) markers.forEach(m => m.closePopup());
+      }
+    });
+  });
+}
+
+// ---- Map ----
+function highlightDaycare(dcId) {
+  const markers = markersByDaycareId[dcId];
+  if (!markers || !markers.length) return;
+  markers.forEach(m => {
+    const el = m.getElement();
+    if (el) el.classList.add('marker-highlight');
+  });
+}
+
+function selectDaycare(dcId) {
+  const markers = markersByDaycareId[dcId];
+  if (!markers || !markers.length) return;
+  const firstMarker = markers[0];
+  firstMarker.openPopup();
+  if (map) map.panTo(firstMarker.getLatLng(), { animate: true, duration: 0.3 });
+}
+
+function unhighlightDaycare(dcId) {
+  const markers = markersByDaycareId[dcId];
+  if (!markers || !markers.length) return;
+  markers.forEach(m => {
+    const el = m.getElement();
+    if (el) el.classList.remove('marker-highlight');
+  });
+  // Only close popup if this card is not the expanded one
+  if (dcId != expandedDaycareId) {
+    markers.forEach(m => m.closePopup());
+  }
+}
+
+function createMarkerIcon(type, isSubLocation, label) {
+  const color = type === 'center' ? '#2980b9' : '#8e44ad';
+  const size = isSubLocation ? 16 : 24;
+  const haloSize = size + 16;
+  const labelHtml = label ? `<div class="map-marker-label">${esc(label)}</div>` : '';
+  return L.divIcon({
+    className: '',
+    html: `<div class="map-marker" style="width:${haloSize}px;height:${haloSize}px;">
+      <div class="map-marker-halo" style="width:${size}px;height:${size}px;background:${color};"></div>
+      <div class="map-marker-dot" style="width:${size}px;height:${size}px;background:${color};"></div>
+      ${labelHtml}
+    </div>`,
+    iconSize: [haloSize, haloSize],
+    iconAnchor: [haloSize/2, haloSize/2],
+    popupAnchor: [0, -size/2 - 4],
+  });
+}
+
+function buildPopup(dc, subLocName) {
+  const typeClass = dc.type === 'center' ? 'map-popup-center' : 'map-popup-family';
+  const typeLabel = dc.type === 'center' ? 'Center' : 'Family Home';
+  let html = `<div class="map-popup-name">${esc(dc.name)}</div>`;
+  html += `<span class="map-popup-type ${typeClass}">${typeLabel}</span>`;
+  if (dc.is_nonprofit) html += ` <span class="map-popup-type" style="background:#d5f5e3;color:#27ae60;">Nonprofit</span>`;
+  if (subLocName) html += `<div class="map-popup-subloc">${esc(subLocName)}</div>`;
+  if (dc.address && !subLocName) html += `<div class="map-popup-row">${esc(dc.address)}</div>`;
+  if (dc.phone) html += `<div class="map-popup-row"><a href="tel:${esc(dc.phone.split('/')[0].trim())}">${esc(dc.phone)}</a></div>`;
+  if (dc.hours) html += `<div class="map-popup-row">${esc(dc.hours)}</div>`;
+  if (dc.language_program_type) html += `<div class="map-popup-row"><strong>${esc(dc.language_program_type)}</strong></div>`;
+  if (dc.ages_served) html += `<div class="map-popup-row">Ages: ${esc(dc.ages_served)}</div>`;
+  if (dc.website) html += `<div class="map-popup-row"><a href="${esc(dc.website)}" target="_blank" rel="noopener">Website</a></div>`;
+  const popupDist = distances[dc.id];
+  if (popupDist) {
+    html += `<div class="map-popup-row" style="color:#96671e;font-weight:600;">\u{1F697} ${popupDist.distance_mi.toFixed(1)} mi \u00B7 ${Math.round(popupDist.duration_min)} min drive</div>`;
+  }
+  if (dc.description) {
+    const desc = dc.description.length > 120 ? dc.description.slice(0, 120) + '...' : dc.description;
+    html += `<div class="map-popup-desc">${esc(desc)}</div>`;
+  }
+  return html;
+}
+
+function renderMap(filtered) {
+  if (!map) {
+    map = L.map('mapContainer').setView([37.7650, -122.4400], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+      maxZoom: 19,
+      subdomains: 'abcd',
+    }).addTo(map);
+
+    // Legend
+    const legend = L.control({ position: 'bottomright' });
+    legend.onAdd = function() {
+      const div = L.DomUtil.create('div', 'map-legend');
+      div.innerHTML = `
+        <div><span class="map-legend-dot" style="background:#2980b9;"></span> Center</div>
+        <div><span class="map-legend-dot" style="background:#8e44ad;"></span> Family Home</div>
+        <div><span class="map-legend-dot" style="background:#27ae60;"></span> Your Location</div>
+        <div style="font-size:0.7rem;color:#999;margin-top:0.2rem;">Smaller dots = sub-locations</div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+  }
+
+  // Clear existing markers
+  mapMarkers.forEach(m => map.removeLayer(m));
+  mapMarkers = [];
+  markersByDaycareId = {};
+
+  const bounds = [];
+
+  // Origin marker
+  if (originCoords) {
+    if (originMarker) map.removeLayer(originMarker);
+    const homeIcon = L.divIcon({
+      className: '',
+      html: `<div class="map-marker map-marker-home" style="width:44px;height:44px;">
+        <div class="map-marker-halo" style="width:28px;height:28px;background:#27ae60;"></div>
+        <div class="map-marker-dot" style="width:28px;height:28px;background:#27ae60;"><div style="width:10px;height:10px;background:white;border-radius:50%;"></div></div>
+        <div class="map-marker-label" style="font-weight:800;color:#27ae60;">Home</div>
+      </div>`,
+      iconSize: [44, 44],
+      iconAnchor: [22, 22],
+      popupAnchor: [0, -16],
+    });
+    originMarker = L.marker(originCoords, { icon: homeIcon })
+      .bindPopup(`<div class="map-popup-name">Your Location</div><div class="map-popup-row">${esc(document.getElementById('addressInput').value)}</div>`)
+      .addTo(map);
+    mapMarkers.push(originMarker);
+    bounds.push(originCoords);
+  }
+
+  function addMarkerInteraction(marker, dcId) {
+    // Hover: no effect on card panel (user is browsing the map)
+    // Click: expand + scroll to card
+    marker.on('click', () => {
+      const cardEl = document.querySelector(`.card[data-daycare-id="${dcId}"]`);
+      if (!cardEl) return;
+      // Accordion: collapse previous
+      const prev = document.querySelector('.card.expanded');
+      if (prev && prev !== cardEl) {
+        prev.classList.remove('expanded');
+        prev.querySelector('.card-expand-hint').textContent = '\u25BE more';
+        const prevId = prev.getAttribute('data-daycare-id');
+        const prevMarkers = markersByDaycareId[prevId];
+        if (prevMarkers) prevMarkers.forEach(m => m.closePopup());
+      }
+      // Expand this card
+      cardEl.classList.add('expanded');
+      cardEl.querySelector('.card-expand-hint').textContent = '\u25B4 less';
+      expandedDaycareId = Number(dcId);
+      cardEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  filtered.forEach(dc => {
+    const coords = COORDS[dc.id];
+    if (!coords) return;
+
+    if (!markersByDaycareId[dc.id]) markersByDaycareId[dc.id] = [];
+
+    if (dc.address_locations && dc.address_locations.length && coords.length > 1) {
+      // Multi-location: add a marker per sub-location
+      dc.address_locations.forEach((loc, i) => {
+        if (i >= coords.length) return;
+        const [lat, lng] = coords[i];
+        const marker = L.marker([lat, lng], { icon: createMarkerIcon(dc.type, true, loc.name) })
+          .bindPopup(buildPopup(dc, `${loc.name}: ${loc.address}${loc.phone ? ' | ' + loc.phone : ''}`), { maxWidth: 300 })
+          .addTo(map);
+        mapMarkers.push(marker);
+        markersByDaycareId[dc.id].push(marker);
+        addMarkerInteraction(marker, dc.id);
+        bounds.push([lat, lng]);
+      });
+    } else {
+      // Single location
+      const [lat, lng] = coords[0];
+      const marker = L.marker([lat, lng], { icon: createMarkerIcon(dc.type, false, dc.name) })
+        .bindPopup(buildPopup(dc, null), { maxWidth: 300 })
+        .addTo(map);
+      mapMarkers.push(marker);
+      markersByDaycareId[dc.id].push(marker);
+      addMarkerInteraction(marker, dc.id);
+      bounds.push([lat, lng]);
+    }
+  });
+
+  if (bounds.length > 0) {
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+  }
+
+  // Leaflet needs a size recalc after display change
+  setTimeout(() => map.invalidateSize(), 100);
+}
+
+function toggleLocations(id, btn) {
+  const el = document.getElementById(id);
+  const arrow = btn.querySelector('.arrow');
+  el.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+// ---- Stats bar ----
+function renderStats() {
+  const dcs = DATA.daycares;
+  const centers = dcs.filter(d => d.type === 'center').length;
+  const homes = dcs.filter(d => d.type === 'family_home').length;
+  const nonprofits = dcs.filter(d => d.is_nonprofit).length;
+  const subsidized = dcs.filter(d => d.subsidies_accepted).length;
+  // neighborhood counts
+  const hoodCounts = {};
+  dcs.forEach(d => { const n = getNeighborhood(d); hoodCounts[n] = (hoodCounts[n]||0) + 1; });
+  const topHoods = Object.entries(hoodCounts).sort((a,b) => b[1]-a[1]).slice(0, 4);
+
+  let html = `
+    <div class="stat"><span class="stat-num">${dcs.length}</span> Total Programs</div>
+    <div class="stat"><span class="stat-num">${centers}</span> Centers</div>
+    <div class="stat"><span class="stat-num">${homes}</span> Family Homes</div>
+    <div class="stat"><span class="stat-num">${nonprofits}</span> Nonprofits</div>
+    <div class="stat"><span class="stat-num">${subsidized}</span> Accept Subsidies</div>
+  `;
+  topHoods.forEach(([name, count]) => {
+    html += `<div class="stat"><span class="stat-num">${count}</span> ${esc(name)}</div>`;
+  });
+  document.getElementById('statsBar').innerHTML = html;
+}
+
+// ---- Init ----
+function init() {
+  // Populate neighborhood filter
+  const hoodSelect = document.getElementById('filterNeighborhood');
+  getNeighborhoods().forEach(n => {
+    const opt = document.createElement('option');
+    opt.value = n; opt.textContent = n;
+    hoodSelect.appendChild(opt);
+  });
+
+  // Populate language filter
+  const langSelect = document.getElementById('filterLanguage');
+  getLanguagePrograms().forEach(lp => {
+    const opt = document.createElement('option');
+    opt.value = lp; opt.textContent = lp;
+    langSelect.appendChild(opt);
+  });
+
+  renderStats();
+
+  // Event listeners
+  document.getElementById('searchBox').addEventListener('input', e => {
+    filters.search = e.target.value;
+    render();
+  });
+  document.getElementById('filterNeighborhood').addEventListener('change', e => {
+    filters.neighborhood = e.target.value;
+    render();
+  });
+  document.getElementById('filterType').addEventListener('change', e => {
+    filters.type = e.target.value;
+    render();
+  });
+  document.getElementById('filterLanguage').addEventListener('change', e => {
+    filters.language = e.target.value;
+    render();
+  });
+  document.getElementById('filterSpecial').addEventListener('change', e => {
+    filters.special = e.target.value;
+    render();
+  });
+  document.getElementById('clearFilters').addEventListener('click', () => {
+    filters = { search: '', neighborhood: '', type: '', language: '', special: '' };
+    document.getElementById('searchBox').value = '';
+    document.getElementById('filterNeighborhood').value = '';
+    document.getElementById('filterType').value = '';
+    document.getElementById('filterLanguage').value = '';
+    document.getElementById('filterSpecial').value = '';
+    render();
+  });
+
+  // Distance bar events
+  document.getElementById('distanceBtn').addEventListener('click', geocodeAndCalculate);
+  document.getElementById('addressInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') geocodeAndCalculate();
+  });
+
+  // Sort toggle
+  document.getElementById('sortNearest').addEventListener('click', function() {
+    sortNearest = !sortNearest;
+    this.classList.toggle('sort-active', sortNearest);
+    render();
+  });
+
+  // Mobile view toggle (List / Map)
+  document.getElementById('mobileToggle').querySelectorAll('.mobile-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.getElementById('mobileToggle').querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const mainEl = document.querySelector('.main');
+      if (tab.getAttribute('data-view') === 'map') {
+        mainEl.classList.add('show-map');
+        setTimeout(() => { if (map) map.invalidateSize(); }, 100);
+      } else {
+        mainEl.classList.remove('show-map');
+        // Scroll to expanded card when switching back to list
+        setTimeout(() => {
+          const expanded = document.querySelector('.card.expanded');
+          if (expanded) expanded.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
+      }
+    });
+  });
+
+  // Mobile filter toggle
+  document.getElementById('filterToggle').addEventListener('click', function() {
+    const controls = document.querySelector('.controls');
+    controls.classList.toggle('filters-open');
+    this.classList.toggle('active');
+    this.innerHTML = controls.classList.contains('filters-open') ? 'Filters \u25B4' : 'Filters \u25BE';
+  });
+
+  render();
+
+  // Auto-calculate distances on load
+  autoCalculateDistances();
+}
+
+init();
+</script>
+</body>
+</html>
