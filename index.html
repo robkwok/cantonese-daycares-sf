@@ -536,6 +536,15 @@ a:hover { text-decoration: underline; }
   align-items: center;
   gap: 0.4rem;
 }
+.directions-link {
+  margin-left: auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.directions-link:hover { text-decoration: underline; }
 .sort-active {
   background: var(--warm-500) !important;
   color: white !important;
@@ -953,10 +962,16 @@ function renderCard(dc) {
   // --- Summary rows (always visible) ---
   let summaryRows = '';
 
-  // Distance
+  // Distance + directions link
   const dist = distances[dc.id];
   if (dist) {
-    summaryRows += `<div class="distance-row">\u{1F697} ${dist.distance_mi.toFixed(1)} mi \u00B7 ${Math.round(dist.duration_min)} min drive</div>`;
+    const dest = dc.address ? dc.address : dc.name + ' San Francisco CA';
+    const origin = document.getElementById('addressInput').value.trim();
+    const directionsUrl = 'https://www.google.com/maps/dir/?api=1'
+      + '&origin=' + encodeURIComponent(origin)
+      + '&destination=' + encodeURIComponent(dest)
+      + '&travelmode=driving';
+    summaryRows += `<div class="distance-row">\u{1F697} ${dist.distance_mi.toFixed(1)} mi \u00B7 ${Math.round(dist.duration_min)} min drive <a class="directions-link" href="${esc(directionsUrl)}" target="_blank" rel="noopener">Directions \u2197</a></div>`;
   }
 
   // Neighborhood (compact)
